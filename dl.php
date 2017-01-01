@@ -25,7 +25,7 @@ if (@file_exists($result_fn)) {
   $retval = 0;
 } else {
   putenv('FILELOAD_BFN=' . $bfn);
-  exec('../fileload_clean.sh --env 2>&1', $output, $retval);
+  exec('../fileload_clean.sh --clean-old-tmp --env 2>&1', $output, $retval);
 }
 
 if ($retval === 0) { Header('Location: ./tmp/' . $result_fn); }

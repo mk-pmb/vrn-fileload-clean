@@ -5,10 +5,16 @@ SELFNAME="$(basename "$SELFFILE" .sh)"; INVOKED_AS="$(basename "$0" .sh)"
 
 
 function fileload_clean () {
+  if [ "$1" == --clean-old-tmp ]; then
+    shift
+    "$SELFPATH"/old_tmp_files.sh . -delete || return $?
+  fi
+
   local BFN="$1"
   [ "$BFN" == --env ] && BFN="$FILELOAD_BFN"
   BFN="${BFN##*/}"
   BFN="${BFN%%\.*}"
+  [ -n "$BFN" ] || return 4$(echo 'E: missing download filename' >&2)
 
   local PDF_URL='http://fahrplanauskunft.vrn.de/vrn/FILELOAD?Filename=#.pdf'
   PDF_URL="${PDF_URL//#/$BFN}"
