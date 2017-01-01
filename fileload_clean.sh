@@ -19,10 +19,11 @@ function fileload_clean () {
   local ORIG_JPEG="$BFN.@${PDF_DPI}dpi.jpeg"
   # [ -s "$ORIG_JPEG" ] || pdf2jpeg "$ORIG_SAVE_FN" "$ORIG_JPEG" || return $?
 
-  local CLEAN_SVG="$BFN.clean.svg"
+  local CLEAN_SVG="$BFN.svg"
   [ -s "$CLEAN_SVG" ] || pdf2svg "$ORIG_SAVE_FN" "$CLEAN_SVG" || return $?
 
-
+  local CLEAN_PNG="$BFN.png"
+  [ -s "$CLEAN_PNG" ] || convert -- "$CLEAN_SVG" "$CLEAN_PNG" || return $?
 
   return 0
 }
@@ -66,6 +67,7 @@ function pdf2svg () {
     -f 1 -l 1
     -r "$PDF_DPI"
     -cropbox
+    -nocenter
     )
   local SED_OPTS=(
     -rf "$SELFPATH"/clean_fileload_svg.sed

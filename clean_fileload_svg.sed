@@ -1,12 +1,36 @@
 #!/bin/sed -urf
 # -*- coding: UTF-8, tab-width: 2 -*-
 
+/<svg xmlns=/{
+  s~ (width|height|x|y)="[0-9]+[a-z]*"~~g
+  s~ ([A-Za-z-]+=)~\n  \1~g
+  s~(\s+)(viewBox)~\1x="0px" y="0px"\1\
+    width="1200px" height="1500px"\
+    viewBox="0 0 525 656.25"\
+    orig-\2~
+  # orig-viewBox="0 0 595 842"
+  # map scaled to full width on original page size: viewBox="0 0 523 740.111"
+  # original page size aspect ratio: 842 / 595 ~= 1.41512605
+  # for comparison:                    sqrt(2) ~= 1.414213562
+  # custom image size: 523 is prime, so let's add a margin of 1.
+  # --> viewBox="0 0 525 743" --> scale to: w=1200px: h=1698px
+  # --> round to width="1200px" height="1500px" (H/W = 1.25):
+  # --> viewBox="0 0 525 656.25"
+}
+
 \!^\s*<defs>!{
   N
   s~^(\s*<defs>\n\s*<g)>~\1 id="defs-group">~
 }
 \!^\s*</defs>!{
-  a <rect x="0" y="0" width="100%" height="100%" style="fill: wheat;" />
+  s~$~\n<rect x="0" y="0" width="100%" height="100%"\
+    style="fill: white;" />~
+  N
+  # map position in SVG coordinates: ca. [36, 80.2]
+  # (ref: clipPath#clip3), cf. rect#map-area-border below
+  # move map top left: translate(-36 -80.2)
+  # add margin of 1: translate(-35 -79.2)
+  s~(\n<g\b[^<>]*)>~\1 transform="translate(-35 -79.2)">~
 }
 
 /^\s*<image /{
@@ -16,10 +40,14 @@
 # make sure id attr is first attr:
 / id="/s~^(\s*<[a-z]+)( [^<>]+)( id="[^A-Za-z0-9-]+")~\1\3\2~
 
-\!^\s*<g style="fill:rgb!{
+/^\s*<g style="fill:rgb/{
   N
   s~^(<g)( [^<>]+>\n\s*<use [^<>]+ x="([0-9.]+)" y="([0-9.]+)"|$\
     )~\1 id="yx-y\4-x\3"\2~
+}
+
+/^\s*<g clip-path=/{
+  s~^(<g)( clip-path="url\(#([A-Za-z0-9-]+)\)")~\1 id="clip-path-url-\3"\2~
 }
 
 /^\s*<path style=/{
@@ -44,7 +72,15 @@
 }
 
 
-
+/^<g id="map-date-time" /{
+  s~^~\
+    <rect id="map-area-border" stroke="magenta" stroke-width="0.5" \
+      fill="none" opacity="0" >\
+    <rect id="map-area-fade" fill="white" opacity="0"\
+      >\n~
+  s~  (<rect id="map-area-[^<>]*)>|$\
+    ~\1x="36" y="80.2" width="523" height="391.9" />~g
+}
 
 
 
